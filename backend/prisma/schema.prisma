@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  name            String
+  phoneNumber     String    @unique
+  profileImageUrl String?
+  about           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  groups          Group[]   @relation("GroupMembers")
+  senderMessages  Message[] @relation("UserMessages")
+  receivedMessage Message[] @relation("ReceivedMessages")
+}
+
+model Group {
+  id       String    @id @default(uuid())
+  name     String
+  avatar   String?
+  members  User[]    @relation("GroupMembers")
+  messages Message[] @relation("GroupMessages")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  text       String
+  timestamp  DateTime @default(now())
+  sender     User     @relation("UserMessages", fields: [senderId], references: [id])
+  senderId   String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId String
+  group      Group?   @relation("GroupMessages", fields: [groupId], references: [id])
+  groupId    String?
+
+  @@index([senderId, receiverId])
+}
